@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Send, Edit3, Save, FileText, Mail } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Send, Edit3, Save, FileText, Mail, History } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 const API = "https://ai-notes-p30j.onrender.com/api";
 
@@ -12,6 +13,17 @@ export default function App() {
   const [editMode, setEditMode] = useState(false);
   const [recipients, setRecipients] = useState("");
   const [emailStatus, setEmailStatus] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
+  const [summaries, setSummaries] = useState([]);
+
+  // Fetch summaries for history
+  useEffect(() => {
+    if (showHistory) {
+      fetch(`${API}/summaries`)
+        .then(res => res.json())
+        .then(data => setSummaries(Array.isArray(data) ? data.reverse() : []));
+    }
+  }, [showHistory]);
 
   const handleSummarize = async () => {
     setLoading(true);
@@ -76,11 +88,44 @@ export default function App() {
   return (
     <div className="app-container">
       <div className="main-content">
-        <div className="app-title">
-          <h1>AI Meeting Notes Summarizer</h1>
-          <p>Transform your meeting transcripts into structured summaries</p>
+        <div className="app-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h1>AI Meeting Notes Summarizer</h1>
+            <p>Transform your meeting transcripts into structured summaries</p>
+          </div>
+          <button
+            className="btn btn-history"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+            onClick={() => setShowHistory(h => !h)}
+          >
+            <History size={18} />
+            {showHistory ? 'Hide History' : 'Summary History'}
+          </button>
         </div>
-        
+
+        {showHistory && (
+          <div className="glass-card" style={{ marginBottom: 24 }}>
+            <div className="card-header">
+              <div className="card-title">
+                <History size={18} />
+                Summary History
+              </div>
+            </div>
+            {summaries.length === 0 ? (
+              <div style={{ color: '#888', padding: 16 }}>No previous summaries found.</div>
+            ) : (
+              <ul style={{ padding: 0, margin: 0, listStyle: 'none' }}>
+                {summaries.map((s, idx) => (
+                  <li key={s._id} style={{ borderBottom: idx < summaries.length - 1 ? '1px solid #333' : 'none', padding: '12px 0', color: '#fff', background: '#23272f', borderRadius: 6, marginBottom: 10 }}>
+                    <div style={{ fontWeight: 500, color: '#fff', marginBottom: 4 }}>{s.summary?.slice(0, 80) || 'Untitled summary'}{s.summary && s.summary.length > 80 ? '...' : ''}</div>
+                    <div style={{ color: '#bbb', fontSize: 13 }}>{new Date(s.createdAt).toLocaleString()}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
         <div className="glass-card">
           <div className="card-header">
             <div className="card-title">
@@ -145,23 +190,21 @@ export default function App() {
               </div>
             </div>
             {editMode ? (
-              <textarea
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-                className="form-textarea"
-                style={{minHeight: '200px'}}
-              />
+              <div style={{ display: 'flex', gap: 24 }}>
+                <textarea
+                  value={summary}
+                  onChange={(e) => setSummary(e.target.value)}
+                  className="form-textarea"
+                  style={{ minHeight: '200px', color: '#fff', background: '#181b20', flex: 1 }}
+                />
+                <div style={{ flex: 1, background: '#23272f', borderRadius: 8, padding: 12, color: '#fff', minHeight: 200, maxHeight: 300, overflow: 'auto', fontSize: 15 }}>
+                  <ReactMarkdown>{summary}</ReactMarkdown>
+                </div>
+              </div>
             ) : (
-              <div 
-                className="summary-display"
-                dangerouslySetInnerHTML={{
-                  __html: summary
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\n\n/g, '</p><p>')
-                    .replace(/^(.+)$/gm, '<p>$1</p>')
-                    .replace(/(<p>.*?:)(<\/p>)/g, '<h3>$1</h3>')
-                }}
-              />
+              <div className="summary-display" style={{ padding: '8px 0', color: '#fff', background: '#23272f', borderRadius: 8 }}>
+                <ReactMarkdown>{summary}</ReactMarkdown>
+              </div>
             )}
             <div className="card-footer">
               {editMode ? (

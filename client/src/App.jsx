@@ -20,7 +20,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import SendIcon from "@mui/icons-material/Send";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 
-const API = "http://localhost:5000/api";
+const API = "https://ai-notes-p30j.onrender.com/api";
 
 function Panel({ title, children }) {
   return (

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Send, Edit3, Save, FileText, Mail } from "lucide-react";
 
-const API = "http://localhost:5000/api";
+const API = "https://ai-notes-p30j.onrender.com/api";
 
 export default function App() {
   const [transcript, setTranscript] = useState("");
